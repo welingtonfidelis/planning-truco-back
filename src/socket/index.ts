@@ -1,18 +1,26 @@
 import socketIo from "socket.io";
 import { roomService } from "../services/room";
 import { KnownErrors } from "../shared/enum/knownErrors";
-import { isNil, isString } from "lodash";
+import isNil from "lodash/isNil";
+import isString from "lodash/isString";
+import { SocketEvents } from "../shared/enum/socketEvents";
 
 const { INVALID_ROOM, MISSING_ROOM, INVALID_CREATE_USER } = KnownErrors;
 
+const { findRoomByIdService, addUserToRoomService, deleteUserFromRoomService } =
+  roomService;
+
 const {
-  findRoomByIdService,
-  addUserToRoomService,
-  deleteUserFromRoomService,
-} = roomService;
+  CONNECTION,
+  DISCONNECTION,
+  EXCEPTION,
+  ROOM_DATA,
+  ROOM_NEW_USER,
+  ROOM_USER_LOGOUT,
+} = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
-  socketServer.on("connection", (socket) => {
+  socketServer.on(CONNECTION, (socket) => {
     const userName = socket.handshake.query.userName as string;
     const roomId = socket.handshake.query.roomId as string;
 
@@ -20,27 +28,27 @@ export const socketListener = (socketServer: socketIo.Server) => {
 
     // EXCEPTIONS
     if (isNil(roomId)) {
-      socket.emit("exception", MISSING_ROOM);
+      socket.emit(EXCEPTION, MISSING_ROOM);
       socket.disconnect();
     }
 
     const roomExists = findRoomByIdService(roomId);
 
     if (!isString(roomId) || !roomExists) {
-      socket.emit("exception", INVALID_ROOM);
+      socket.emit(EXCEPTION, INVALID_ROOM);
       socket.disconnect();
     }
 
     if (!userName) {
-      socket.emit("exception", INVALID_CREATE_USER);
+      socket.emit(EXCEPTION, INVALID_CREATE_USER);
       socket.disconnect();
     }
 
     // LOGOUT
-    socket.on("disconnect", () => {
+    socket.on(DISCONNECTION, () => {
       deleteUserFromRoomService(roomId, socket.id);
-      
-      socket.to(roomId).emit("userLogout", socket.id);
+
+      socket.to(roomId).emit(ROOM_USER_LOGOUT, socket.id);
       socket.leave(roomId);
     });
 
@@ -52,8 +60,8 @@ export const socketListener = (socketServer: socketIo.Server) => {
     const room = addUserToRoomService(roomId, newUser);
 
     socket.join(roomId);
-    socket.emit("roomData", room);
-    socket.to(roomId).emit("newUser", newUser);
+    socket.emit(ROOM_DATA, room);
+    socket.to(roomId).emit(ROOM_NEW_USER, newUser);
   });
 };
 
