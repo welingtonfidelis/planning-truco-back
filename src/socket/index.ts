@@ -17,6 +17,7 @@ const {
   ROOM_DATA,
   ROOM_NEW_USER,
   ROOM_USER_LOGOUT,
+  ROOM_NEW_USER_OWN
 } = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
@@ -46,10 +47,12 @@ export const socketListener = (socketServer: socketIo.Server) => {
 
     // LOGOUT
     socket.on(DISCONNECTION, () => {
-      deleteUserFromRoomService(roomId, socket.id);
+      const updatedRoom = deleteUserFromRoomService(roomId, socket.id);
 
       socket.to(roomId).emit(ROOM_USER_LOGOUT, socket.id);
       socket.leave(roomId);
+      
+      if(updatedRoom) socket.to(roomId).emit(ROOM_NEW_USER_OWN, updatedRoom.ownerUserId);
     });
 
     const newUser = {

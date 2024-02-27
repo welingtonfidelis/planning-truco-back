@@ -47,7 +47,9 @@ export const roomRepository = {
     );
 
     if (!rooms[roomId].users.length) {
-      return delete rooms[roomId];
+      delete rooms[roomId]
+
+      return;
     }
 
     rooms[roomId].ownerUserId = rooms[roomId].users[0].id;

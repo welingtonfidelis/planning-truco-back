@@ -5,4 +5,5 @@ export enum SocketEvents {
   ROOM_DATA = "room_data",
   ROOM_NEW_USER = "room_new_user",
   ROOM_USER_LOGOUT = "room_user_logout",
+  ROOM_NEW_USER_OWN = 'room_new_user_own'
 }
