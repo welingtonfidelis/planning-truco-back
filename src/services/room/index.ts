@@ -2,8 +2,18 @@ import { randomUUID } from "crypto";
 import { roomRepository } from "../../repositories/room";
 import { User } from "../../domain/user";
 import { Task } from "../../domain/task";
+import { Room } from "../../domain/room";
 
-const { findById, addRoom, deleteRoom, addUserToRoom, deleteUserFromRoom, addTaskToRoom, deleteTaskFromRoom } = roomRepository;
+const {
+  findById,
+  addRoom,
+  deleteRoom,
+  addUserToRoom,
+  deleteUserFromRoom,
+  addTaskToRoom,
+  deleteTaskFromRoom,
+  updateRoom,
+} = roomRepository;
 
 export const roomService = {
   findRoomByIdService(id: string) {
@@ -19,6 +29,10 @@ export const roomService = {
     return deleteRoom(id);
   },
 
+  updateRoomService(roomId: string, room: Partial<Room>) {
+    return updateRoom(roomId, room);
+  },
+
   addUserToRoomService(roomId: string, user: User) {
     return addUserToRoom(roomId, user);
   },
@@ -29,7 +43,7 @@ export const roomService = {
 
   addTaskToRoomService(roomId: string, task: Task) {
     task.id = randomUUID();
-    
+
     return addTaskToRoom(roomId, task);
   },
 

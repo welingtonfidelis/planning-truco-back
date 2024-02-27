@@ -15,6 +15,7 @@ const {
   deleteUserFromRoomService,
   addTaskToRoomService,
   deleteTaskFromRoomService,
+  updateRoomService
 } = roomService;
 
 const {
@@ -29,6 +30,8 @@ const {
   SERVER_ROOM_DELETE_TASK,
   CLIENT_ROOM_DELETE_TASK,
   CLIENT_ROOM_NEW_TASK,
+  SERVER_ROOM_SELECT_VOTING_TASK,
+  CLIENT_ROOM_SELECT_VOTING_TASK,
 } = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
@@ -65,6 +68,12 @@ export const socketListener = (socketServer: socketIo.Server) => {
       deleteTaskFromRoomService(roomId, data);
 
       socket.nsp.to(roomId).emit(SERVER_ROOM_DELETE_TASK, data);
+    });
+
+    socket.on(CLIENT_ROOM_SELECT_VOTING_TASK, (data: string) => {
+      updateRoomService(roomId, { currentTaskId: data });
+
+      socket.nsp.to(roomId).emit(SERVER_ROOM_SELECT_VOTING_TASK, data);
     });
 
     // LOGOUT

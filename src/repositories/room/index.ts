@@ -4,6 +4,7 @@ import isNil from "lodash/isNil";
 import { RoomIndexed } from "../../domain/room";
 import { User } from "../../domain/user";
 import { Task } from "../../domain/task";
+import { Room } from "../../domain/room";
 
 const rooms: RoomIndexed = {};
 
@@ -20,6 +21,13 @@ export const roomRepository = {
       showVotes: false,
       tasks: [],
       users: [],
+    });
+  },
+
+  updateRoom(roomId: string, data: Partial<Room>) {
+    return (rooms[roomId] = {
+      ...rooms[roomId],
+      ...data,
     });
   },
 
