@@ -3,6 +3,7 @@ import isNil from "lodash/isNil";
 
 import { RoomIndexed } from "../../domain/room";
 import { User } from "../../domain/user";
+import { Task } from "../../domain/task";
 
 const rooms: RoomIndexed = {};
 
@@ -27,7 +28,7 @@ export const roomRepository = {
   },
 
   addUserToRoom(roomId: string, user: User) {
-    if(isNil(rooms[roomId])) return;
+    if (isNil(rooms[roomId])) return;
 
     if (
       isEmpty(rooms[roomId]?.ownerUserId) ||
@@ -47,12 +48,28 @@ export const roomRepository = {
     );
 
     if (!rooms[roomId].users.length) {
-      delete rooms[roomId]
+      delete rooms[roomId];
 
       return;
     }
 
     rooms[roomId].ownerUserId = rooms[roomId].users[0].id;
+
+    return rooms[roomId];
+  },
+
+  addTaskToRoom(roomId: string, task: Task) {
+    if (isNil(rooms[roomId])) return;
+
+    rooms[roomId].tasks.push(task);
+
+    return task;
+  },
+
+  deleteTaskFromRoom(roomId: string, taskId: string) {
+    rooms[roomId].tasks = rooms[roomId].tasks.filter(
+      (task) => task.id !== taskId
+    );
 
     return rooms[roomId];
   },

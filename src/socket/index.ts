@@ -4,28 +4,37 @@ import { KnownErrors } from "../shared/enum/knownErrors";
 import isNil from "lodash/isNil";
 import isString from "lodash/isString";
 import { SocketEvents } from "../shared/enum/socketEvents";
+import { Task } from "../domain/task";
+import { randomUUID } from "crypto";
 
 const { INVALID_ROOM, MISSING_ROOM, INVALID_CREATE_USER } = KnownErrors;
 
-const { findRoomByIdService, addUserToRoomService, deleteUserFromRoomService } =
-  roomService;
+const {
+  findRoomByIdService,
+  addUserToRoomService,
+  deleteUserFromRoomService,
+  addTaskToRoomService,
+  deleteTaskFromRoomService,
+} = roomService;
 
 const {
   CONNECTION,
   DISCONNECTION,
   EXCEPTION,
-  ROOM_DATA,
-  ROOM_NEW_USER,
-  ROOM_USER_LOGOUT,
-  ROOM_NEW_USER_OWN
+  SERVER_ROOM_DATA,
+  SERVER_ROOM_NEW_USER,
+  SERVER_ROOM_USER_LOGOUT,
+  SERVER_ROOM_NEW_USER_OWN,
+  SERVER_ROOM_NEW_TASK,
+  SERVER_ROOM_DELETE_TASK,
+  CLIENT_ROOM_DELETE_TASK,
+  CLIENT_ROOM_NEW_TASK,
 } = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
   socketServer.on(CONNECTION, (socket) => {
     const userName = socket.handshake.query.userName as string;
     const roomId = socket.handshake.query.roomId as string;
-
-    console.log("socket: ", roomId, socket.id, userName);
 
     // EXCEPTIONS
     if (isNil(roomId)) {
@@ -45,14 +54,30 @@ export const socketListener = (socketServer: socketIo.Server) => {
       socket.disconnect();
     }
 
+    // TASKS
+    socket.on(CLIENT_ROOM_NEW_TASK, (data: Task) => {
+      const newTask = addTaskToRoomService(roomId, data);
+
+      socket.nsp.to(roomId).emit(SERVER_ROOM_NEW_TASK, newTask);
+    });
+
+    socket.on(CLIENT_ROOM_DELETE_TASK, (data: string) => {
+      deleteTaskFromRoomService(roomId, data);
+
+      socket.nsp.to(roomId).emit(SERVER_ROOM_DELETE_TASK, data);
+    });
+
     // LOGOUT
     socket.on(DISCONNECTION, () => {
       const updatedRoom = deleteUserFromRoomService(roomId, socket.id);
 
-      socket.to(roomId).emit(ROOM_USER_LOGOUT, socket.id);
+      socket.to(roomId).emit(SERVER_ROOM_USER_LOGOUT, socket.id);
       socket.leave(roomId);
-      
-      if(updatedRoom) socket.to(roomId).emit(ROOM_NEW_USER_OWN, updatedRoom.ownerUserId);
+
+      if (updatedRoom)
+        socket
+          .to(roomId)
+          .emit(SERVER_ROOM_NEW_USER_OWN, updatedRoom.ownerUserId);
     });
 
     const newUser = {
@@ -63,8 +88,8 @@ export const socketListener = (socketServer: socketIo.Server) => {
     const room = addUserToRoomService(roomId, newUser);
 
     socket.join(roomId);
-    socket.emit(ROOM_DATA, room);
-    socket.to(roomId).emit(ROOM_NEW_USER, newUser);
+    socket.emit(SERVER_ROOM_DATA, room);
+    socket.to(roomId).emit(SERVER_ROOM_NEW_USER, newUser);
   });
 };
 
