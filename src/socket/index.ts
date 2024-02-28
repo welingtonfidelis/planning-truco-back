@@ -5,7 +5,6 @@ import isNil from "lodash/isNil";
 import isString from "lodash/isString";
 import { SocketEvents } from "../shared/enum/socketEvents";
 import { Task } from "../domain/task";
-import { randomUUID } from "crypto";
 
 const { INVALID_ROOM, MISSING_ROOM, INVALID_CREATE_USER } = KnownErrors;
 
@@ -15,7 +14,9 @@ const {
   deleteUserFromRoomService,
   addTaskToRoomService,
   deleteTaskFromRoomService,
-  updateRoomService
+  updateRoomService,
+  updateUserVoteService,
+  updateShowVotes,
 } = roomService;
 
 const {
@@ -32,6 +33,10 @@ const {
   CLIENT_ROOM_NEW_TASK,
   SERVER_ROOM_SELECT_VOTING_TASK,
   CLIENT_ROOM_SELECT_VOTING_TASK,
+  SERVER_ROOM_VOTE_TASK,
+  CLIENT_ROOM_VOTE_TASK,
+  SERVER_ROOM_SHOW_HIDE_VOTES,
+  CLIENT_ROOM_SHOW_HIDE_VOTES,
 } = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
@@ -74,6 +79,27 @@ export const socketListener = (socketServer: socketIo.Server) => {
       updateRoomService(roomId, { currentTaskId: data });
 
       socket.nsp.to(roomId).emit(SERVER_ROOM_SELECT_VOTING_TASK, data);
+    });
+
+    // VOTES
+    socket.on(CLIENT_ROOM_VOTE_TASK, (data: number) => {
+      const room = findRoomByIdService(roomId);
+
+      if (room.showVotes || !room.currentTaskId) return;
+
+      updateUserVoteService(roomId, socket.id, data);
+
+      socket.nsp.to(roomId).emit(SERVER_ROOM_VOTE_TASK, { userId: socket.id, vote: data});
+    });
+
+    socket.on(CLIENT_ROOM_SHOW_HIDE_VOTES, (data: boolean) => {
+      const room = findRoomByIdService(roomId);
+
+      if (!room.currentTaskId) return;
+
+      const { tasks, users } = updateShowVotes(roomId, data);
+
+      socket.nsp.to(roomId).emit(SERVER_ROOM_SHOW_HIDE_VOTES, { tasks, users, showVotes: data });
     });
 
     // LOGOUT

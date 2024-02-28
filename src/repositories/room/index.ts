@@ -81,4 +81,21 @@ export const roomRepository = {
 
     return rooms[roomId];
   },
+
+  updateUserVote(roomId: string, userId: string, vote: number) {
+    const updatedUsers = rooms[roomId].users.map((user) => {
+      if (user.id === userId) {
+        return {
+          ...user,
+          vote,
+        };
+      }
+
+      return user;
+    });
+
+    rooms[roomId].users = updatedUsers;
+    
+    return rooms[roomId];
+  },
 };
