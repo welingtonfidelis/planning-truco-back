@@ -18,6 +18,7 @@ const {
   updateCurrentTaskService,
   updateUserVoteService,
   updateShowVotesService,
+  resetVotesService,
   updateUserProfile,
 } = roomService;
 
@@ -37,8 +38,10 @@ const {
   CLIENT_ROOM_SELECT_VOTING_TASK,
   SERVER_ROOM_VOTE_TASK,
   CLIENT_ROOM_VOTE_TASK,
-  SERVER_ROOM_SHOW_HIDE_VOTES,
-  CLIENT_ROOM_SHOW_HIDE_VOTES,
+  SERVER_ROOM_SHOW_VOTES,
+  CLIENT_ROOM_SHOW_VOTES,
+  SERVER_ROOM_RESET_VOTES,
+  CLIENT_ROOM_RESET_VOTES,
   SERVER_USER_UPDATE_PROFILE,
   CLIENT_USER_UPDATE_PROFILE,
 } = SocketEvents;
@@ -81,13 +84,14 @@ export const socketListener = (socketServer: socketIo.Server) => {
     // USERS
     socket.on(CLIENT_USER_UPDATE_PROFILE, (data: Partial<User>) => {
       const { id: userId, ...profileData } = data;
-      console.log('data: ', data);
-      
-      if(!userId) return;
+
+      if (!userId) return;
 
       updateUserProfile(roomId, userId, profileData);
-      
-      socket.nsp.to(roomId).emit(SERVER_USER_UPDATE_PROFILE, { userId, profileData });
+
+      socket.nsp
+        .to(roomId)
+        .emit(SERVER_USER_UPDATE_PROFILE, { userId, profileData });
     });
 
     // TASKS
@@ -104,17 +108,14 @@ export const socketListener = (socketServer: socketIo.Server) => {
     });
 
     socket.on(CLIENT_ROOM_SELECT_VOTING_TASK, (data: string) => {
-      const { users } = updateCurrentTaskService(roomId, data);
+      updateCurrentTaskService(roomId, data);
 
-      socket.nsp
-        .to(roomId)
-        .emit(SERVER_ROOM_SELECT_VOTING_TASK, { currentTaskId: data, users, showVotes: false });
+      socket.nsp.to(roomId).emit(SERVER_ROOM_SELECT_VOTING_TASK, data);
     });
 
     // VOTES
     socket.on(CLIENT_ROOM_VOTE_TASK, (data: number) => {
       const room = findRoomByIdService(roomId);
-      console.log("room: ", room);
 
       if (room.showVotes || !room.currentTaskId) return;
 
@@ -125,16 +126,28 @@ export const socketListener = (socketServer: socketIo.Server) => {
         .emit(SERVER_ROOM_VOTE_TASK, { userId: socket.id, vote: data });
     });
 
-    socket.on(CLIENT_ROOM_SHOW_HIDE_VOTES, (data: boolean) => {
+    socket.on(CLIENT_ROOM_SHOW_VOTES, () => {
       const room = findRoomByIdService(roomId);
 
       if (!room.currentTaskId) return;
 
-      const { tasks, users } = updateShowVotesService(roomId, data);
+      const { points } = updateShowVotesService(roomId);
 
       socket.nsp
         .to(roomId)
-        .emit(SERVER_ROOM_SHOW_HIDE_VOTES, { tasks, users, showVotes: data });
+        .emit(SERVER_ROOM_SHOW_VOTES, { points });
+    });
+
+    socket.on(CLIENT_ROOM_RESET_VOTES, () => {
+      const room = findRoomByIdService(roomId);
+
+      if (!room.currentTaskId) return;
+
+      const { points } = resetVotesService(roomId);
+
+      socket.nsp
+        .to(roomId)
+        .emit(SERVER_ROOM_RESET_VOTES, { points });
     });
 
     // LOGOUT

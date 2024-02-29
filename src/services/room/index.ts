@@ -62,31 +62,35 @@ export const roomService = {
     const { users } = findById(roomId);
 
     const updatedUsers = users.map((user) => ({ ...user, vote: null }));
-    updateRoom(roomId, { users: updatedUsers, currentTaskId: taskId, showVotes: false });
-
-    return { users: updatedUsers };
+    return updateRoom(roomId, {
+      users: updatedUsers,
+      currentTaskId: taskId,
+      showVotes: false,
+    });
   },
 
-  updateShowVotesService(roomId: string, showVotes: boolean) {
+  updateShowVotesService(roomId: string) {
     const { currentTaskId, tasks, users } = findById(roomId);
 
-    if (showVotes) {
-      const totalVotes = users.reduce((acc, user) => {
-        if (isNil(user.vote) || JokerCardValue.includes(user.vote)) return acc;
+    const totalVotes = users.reduce((acc, user) => {
+      if (isNil(user.vote) || JokerCardValue.includes(user.vote)) return acc;
 
-        return (acc += user.vote);
-      }, 0);
-      const averageVotes = totalVotes / users.length;
-      const updatedTasks = tasks.map((task) => {
-        if (task.id === currentTaskId) return { ...task, points: averageVotes };
+      return (acc += user.vote);
+    }, 0);
+    const averageVotes = totalVotes / users.length;
+    const updatedTasks = tasks.map((task) => {
+      if (task.id === currentTaskId) return { ...task, points: averageVotes };
 
-        return task;
-      });
+      return task;
+    });
 
-      updateRoom(roomId, { tasks: updatedTasks, showVotes });
+    updateRoom(roomId, { tasks: updatedTasks, showVotes: true });
 
-      return { tasks: updatedTasks };
-    }
+    return { currentTaskId, points: averageVotes };
+  },
+
+  resetVotesService(roomId: string) {
+    const { currentTaskId, tasks, users } = findById(roomId);
 
     const updatedUsers = users.map((user) => ({ ...user, vote: null }));
     const updatedTasks = tasks.map((task) => {
@@ -95,9 +99,13 @@ export const roomService = {
       return task;
     });
 
-    updateRoom(roomId, { users: updatedUsers, tasks: updatedTasks, showVotes });
+    updateRoom(roomId, {
+      users: updatedUsers,
+      tasks: updatedTasks,
+      showVotes: false,
+    });
 
-    return { users: updatedUsers, tasks: updatedTasks };
+    return { currentTaskId, points: 0 };
   },
 
   updateUserProfile(roomId: string, userId: string, data: Partial<User>) {
@@ -106,13 +114,13 @@ export const roomService = {
       if (user.id === userId) {
         return {
           ...user,
-          ...data
-        }
+          ...data,
+        };
       }
 
       return user;
     });
 
     return updateRoom(roomId, { users: updatedUsers });
-  }
+  },
 };
