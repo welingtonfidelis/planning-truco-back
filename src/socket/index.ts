@@ -1,10 +1,11 @@
 import socketIo from "socket.io";
-import { roomService } from "../services/room";
-import { KnownErrors } from "../shared/enum/knownErrors";
 import isNil from "lodash/isNil";
 import isString from "lodash/isString";
+import { roomService } from "../services/room";
+import { KnownErrors } from "../shared/const/knownErrors";
 import { SocketEvents } from "../shared/enum/socketEvents";
 import { Task } from "../domain/task";
+import { User } from "../domain/user";
 
 const { INVALID_ROOM, MISSING_ROOM, INVALID_CREATE_USER } = KnownErrors;
 
@@ -14,9 +15,10 @@ const {
   deleteUserFromRoomService,
   addTaskToRoomService,
   deleteTaskFromRoomService,
-  updateRoomService,
+  updateCurrentTaskService,
   updateUserVoteService,
-  updateShowVotes,
+  updateShowVotesService,
+  updateUserProfile,
 } = roomService;
 
 const {
@@ -37,6 +39,8 @@ const {
   CLIENT_ROOM_VOTE_TASK,
   SERVER_ROOM_SHOW_HIDE_VOTES,
   CLIENT_ROOM_SHOW_HIDE_VOTES,
+  SERVER_USER_UPDATE_PROFILE,
+  CLIENT_USER_UPDATE_PROFILE,
 } = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
@@ -62,6 +66,30 @@ export const socketListener = (socketServer: socketIo.Server) => {
       socket.disconnect();
     }
 
+    // FIRST USER CONNECTION
+    const newUser = {
+      id: socket.id,
+      name: userName as string,
+      vote: null,
+    };
+    const room = addUserToRoomService(roomId, newUser);
+
+    socket.join(roomId);
+    socket.emit(SERVER_ROOM_DATA, room);
+    socket.to(roomId).emit(SERVER_ROOM_NEW_USER, newUser);
+
+    // USERS
+    socket.on(CLIENT_USER_UPDATE_PROFILE, (data: Partial<User>) => {
+      const { id: userId, ...profileData } = data;
+      console.log('data: ', data);
+      
+      if(!userId) return;
+
+      updateUserProfile(roomId, userId, profileData);
+      
+      socket.nsp.to(roomId).emit(SERVER_USER_UPDATE_PROFILE, { userId, profileData });
+    });
+
     // TASKS
     socket.on(CLIENT_ROOM_NEW_TASK, (data: Task) => {
       const newTask = addTaskToRoomService(roomId, data);
@@ -76,20 +104,25 @@ export const socketListener = (socketServer: socketIo.Server) => {
     });
 
     socket.on(CLIENT_ROOM_SELECT_VOTING_TASK, (data: string) => {
-      updateRoomService(roomId, { currentTaskId: data });
+      const { users } = updateCurrentTaskService(roomId, data);
 
-      socket.nsp.to(roomId).emit(SERVER_ROOM_SELECT_VOTING_TASK, data);
+      socket.nsp
+        .to(roomId)
+        .emit(SERVER_ROOM_SELECT_VOTING_TASK, { currentTaskId: data, users, showVotes: false });
     });
 
     // VOTES
     socket.on(CLIENT_ROOM_VOTE_TASK, (data: number) => {
       const room = findRoomByIdService(roomId);
+      console.log("room: ", room);
 
       if (room.showVotes || !room.currentTaskId) return;
 
       updateUserVoteService(roomId, socket.id, data);
 
-      socket.nsp.to(roomId).emit(SERVER_ROOM_VOTE_TASK, { userId: socket.id, vote: data});
+      socket.nsp
+        .to(roomId)
+        .emit(SERVER_ROOM_VOTE_TASK, { userId: socket.id, vote: data });
     });
 
     socket.on(CLIENT_ROOM_SHOW_HIDE_VOTES, (data: boolean) => {
@@ -97,9 +130,11 @@ export const socketListener = (socketServer: socketIo.Server) => {
 
       if (!room.currentTaskId) return;
 
-      const { tasks, users } = updateShowVotes(roomId, data);
+      const { tasks, users } = updateShowVotesService(roomId, data);
 
-      socket.nsp.to(roomId).emit(SERVER_ROOM_SHOW_HIDE_VOTES, { tasks, users, showVotes: data });
+      socket.nsp
+        .to(roomId)
+        .emit(SERVER_ROOM_SHOW_HIDE_VOTES, { tasks, users, showVotes: data });
     });
 
     // LOGOUT
@@ -114,17 +149,6 @@ export const socketListener = (socketServer: socketIo.Server) => {
           .to(roomId)
           .emit(SERVER_ROOM_NEW_USER_OWN, updatedRoom.ownerUserId);
     });
-
-    const newUser = {
-      id: socket.id,
-      name: userName as string,
-      vote: null,
-    };
-    const room = addUserToRoomService(roomId, newUser);
-
-    socket.join(roomId);
-    socket.emit(SERVER_ROOM_DATA, room);
-    socket.to(roomId).emit(SERVER_ROOM_NEW_USER, newUser);
   });
 };
 

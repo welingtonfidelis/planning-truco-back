@@ -14,6 +14,7 @@ export enum SocketEvents {
   SERVER_ROOM_SELECT_VOTING_TASK = "server_room_select_voting_task",
   SERVER_ROOM_VOTE_TASK = "server_room_vote_task",
   SERVER_ROOM_SHOW_HIDE_VOTES = "server_room_show_hide_votes",
+  SERVER_USER_UPDATE_PROFILE = "server_user_update_profile",
 
   // client event
   CLIENT_ROOM_NEW_TASK = "client_room_new_task",
@@ -21,4 +22,5 @@ export enum SocketEvents {
   CLIENT_ROOM_SELECT_VOTING_TASK = "client_room_select_voting_task",
   CLIENT_ROOM_VOTE_TASK = "client_room_vote_task",
   CLIENT_ROOM_SHOW_HIDE_VOTES = "client_room_show_hide_votes",
+  CLIENT_USER_UPDATE_PROFILE = "client_user_update_profile",
 }
