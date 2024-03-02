@@ -79,6 +79,14 @@ export const roomRepository = {
       (task) => task.id !== taskId
     );
 
+    if (rooms[roomId].currentTaskId === taskId) {
+      rooms[roomId].currentTaskId = "";
+      rooms[roomId].users = rooms[roomId].users.map((user) => ({
+        ...user,
+        vote: null,
+      }));
+    }
+
     return rooms[roomId];
   },
 
@@ -95,7 +103,7 @@ export const roomRepository = {
     });
 
     rooms[roomId].users = updatedUsers;
-    
+
     return rooms[roomId];
   },
 };
