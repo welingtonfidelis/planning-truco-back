@@ -1,1 +1,0 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../src/controllers/room/index.ts"],"names":[],"mappings":";;;AACA,8CAAkD;AAElD,MAAM,EAAE,cAAc,EAAE,GAAG,kBAAW,CAAC;AAE1B,QAAA,cAAc,GAAG;IAC5B,MAAM,CAAC,GAAY,EAAE,GAAa;QAChC,MAAM,IAAI,GAAG,cAAc,EAAE,CAAC;QAE9B,OAAO,GAAG,CAAC,IAAI,CAAC,EAAE,EAAE,EAAE,IAAI,CAAC,EAAE,EAAE,CAAC,CAAC;IACnC,CAAC;CACF,CAAC"}
