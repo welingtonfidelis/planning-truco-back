@@ -1,1 +1,1 @@
-export const JokerCardValue = [-1, 1000];
+export const JokerCardValue = ["-1", "1000"];

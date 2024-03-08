@@ -1,10 +1,14 @@
 import { randomUUID } from "crypto";
+import isNil from "lodash/isNil";
+import isNaN from "lodash/isNaN";
+
 import { roomRepository } from "../../repositories/room";
 import { User } from "../../domain/user";
 import { Task } from "../../domain/task";
 import { Room } from "../../domain/room";
 import { JokerCardValue } from "../../shared/const/jokerCardValue";
-import isNil from "lodash/isNil";
+
+import { CreateRoomServicePayload } from "./types";
 
 const {
   findById,
@@ -23,9 +27,9 @@ export const roomService = {
     return findById(id);
   },
 
-  addRoomService() {
+  addRoomService(payload: CreateRoomServicePayload) {
     const id = randomUUID();
-    return addRoom(id);
+    return addRoom({ id, ...payload });
   },
 
   deleteRoomService(id: string) {
@@ -54,7 +58,7 @@ export const roomService = {
     return deleteTaskFromRoom(roomId, taskId);
   },
 
-  updateUserVoteService(roomId: string, userId: string, vote: number) {
+  updateUserVoteService(roomId: string, userId: string, vote: string) {
     return updateUserVote(roomId, userId, vote);
   },
 
@@ -73,20 +77,28 @@ export const roomService = {
     const { currentTaskId, tasks, users } = findById(roomId);
 
     const totalVotes = users.reduce((acc, user) => {
-      if (isNil(user.vote) || JokerCardValue.includes(user.vote)) return acc;
+      if (
+        isNil(user.vote) ||
+        isNaN(Number(user.vote)) ||
+        JokerCardValue.includes(user.vote)
+      ) {
+        return acc;
+      }
 
-      return (acc += user.vote);
+      return (acc += Number(user.vote));
     }, 0);
-    const averageVotes = totalVotes / users.length;
+    
+    const points = totalVotes / users.length;
+
     const updatedTasks = tasks.map((task) => {
-      if (task.id === currentTaskId) return { ...task, points: averageVotes };
+      if (task.id === currentTaskId) return { ...task, points };
 
       return task;
     });
 
     updateRoom(roomId, { tasks: updatedTasks, showVotes: true });
 
-    return { currentTaskId, points: averageVotes };
+    return { currentTaskId, points };
   },
 
   resetVotesService(roomId: string) {

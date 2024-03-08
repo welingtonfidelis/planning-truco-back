@@ -8,6 +8,7 @@ export interface Room {
   showVotes: boolean;
   currentTaskId: string;
   tasks: Task[];
+  scale: string[];
 }
 
 export interface RoomIndexed {

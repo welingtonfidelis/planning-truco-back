@@ -6,6 +6,8 @@ import { User } from "../../domain/user";
 import { Task } from "../../domain/task";
 import { Room } from "../../domain/room";
 
+import { CreateRoomRepositoryPayload } from './types';
+
 const rooms: RoomIndexed = {};
 
 export const roomRepository = {
@@ -13,7 +15,9 @@ export const roomRepository = {
     return rooms[id];
   },
 
-  addRoom(id: string) {
+  addRoom(payload: CreateRoomRepositoryPayload) {
+    const {  id, scale } = payload;
+
     return (rooms[id] = {
       id,
       currentTaskId: "",
@@ -21,6 +25,7 @@ export const roomRepository = {
       showVotes: false,
       tasks: [],
       users: [],
+      scale,
     });
   },
 
@@ -90,7 +95,7 @@ export const roomRepository = {
     return rooms[roomId];
   },
 
-  updateUserVote(roomId: string, userId: string, vote: number) {
+  updateUserVote(roomId: string, userId: string, vote: string) {
     const updatedUsers = rooms[roomId].users.map((user) => {
       if (user.id === userId) {
         return {

@@ -114,7 +114,7 @@ export const socketListener = (socketServer: socketIo.Server) => {
     });
 
     // VOTES
-    socket.on(CLIENT_ROOM_VOTE_TASK, (data: number) => {
+    socket.on(CLIENT_ROOM_VOTE_TASK, (data: string) => {
       const room = findRoomByIdService(roomId);
 
       if (room.showVotes || !room.currentTaskId) return;
