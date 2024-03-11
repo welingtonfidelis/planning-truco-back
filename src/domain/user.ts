@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   name: string;
-  vote: number | null;
+  vote: string | null;
 }
 
 export interface UserWithRoom extends User {
