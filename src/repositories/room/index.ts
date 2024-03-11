@@ -6,7 +6,7 @@ import { User } from "../../domain/user";
 import { Task } from "../../domain/task";
 import { Room } from "../../domain/room";
 
-import { CreateRoomRepositoryPayload } from './types';
+import { CreateRoomRepositoryPayload } from "./types";
 
 const rooms: RoomIndexed = {};
 
@@ -16,7 +16,7 @@ export const roomRepository = {
   },
 
   addRoom(payload: CreateRoomRepositoryPayload) {
-    const {  id, scale } = payload;
+    const { id, scale } = payload;
 
     return (rooms[id] = {
       id,
@@ -66,7 +66,9 @@ export const roomRepository = {
       return;
     }
 
-    rooms[roomId].ownerUserId = rooms[roomId].users[0].id;
+    if (rooms[roomId].ownerUserId === userId) {
+      rooms[roomId].ownerUserId = rooms[roomId].users[0].id;
+    }
 
     return rooms[roomId];
   },
