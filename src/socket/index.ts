@@ -19,12 +19,13 @@ const {
   updateUserVoteService,
   updateShowVotesService,
   resetVotesService,
-  updateUserProfile,
+  updateUserProfileService,
+  updateOwnerRoomService,
 } = roomService;
 
 const {
   CONNECTION,
-  DISCONNECTION,
+  DISCONNECT,
   EXCEPTION,
   SERVER_ROOM_DATA,
   SERVER_ROOM_NEW_USER,
@@ -44,6 +45,9 @@ const {
   CLIENT_ROOM_RESET_VOTES,
   SERVER_USER_UPDATE_PROFILE,
   CLIENT_USER_UPDATE_PROFILE,
+  CLIENT_KICK_USER,
+  CLIENT_OWNER_ROOM_TRANSFER,
+  SERVER_OWNER_ROOM_TRANSFER,
 } = SocketEvents;
 
 export const socketListener = (socketServer: socketIo.Server) => {
@@ -87,11 +91,21 @@ export const socketListener = (socketServer: socketIo.Server) => {
 
       if (!userId) return;
 
-      updateUserProfile(roomId, userId, profileData);
+      updateUserProfileService(roomId, userId, profileData);
 
       socket.nsp
         .to(roomId)
         .emit(SERVER_USER_UPDATE_PROFILE, { userId, profileData });
+    });
+
+    socket.on(CLIENT_KICK_USER, (data: string) => {
+      socket.in(data).disconnectSockets();
+    });
+
+    socket.on(CLIENT_OWNER_ROOM_TRANSFER, (data: string) => {
+      updateOwnerRoomService(roomId, data);
+
+      socket.nsp.to(roomId).emit(SERVER_OWNER_ROOM_TRANSFER, data);
     });
 
     // TASKS
@@ -133,9 +147,7 @@ export const socketListener = (socketServer: socketIo.Server) => {
 
       const { points } = updateShowVotesService(roomId);
 
-      socket.nsp
-        .to(roomId)
-        .emit(SERVER_ROOM_SHOW_VOTES, { points });
+      socket.nsp.to(roomId).emit(SERVER_ROOM_SHOW_VOTES, { points });
     });
 
     socket.on(CLIENT_ROOM_RESET_VOTES, () => {
@@ -145,13 +157,11 @@ export const socketListener = (socketServer: socketIo.Server) => {
 
       const { points } = resetVotesService(roomId);
 
-      socket.nsp
-        .to(roomId)
-        .emit(SERVER_ROOM_RESET_VOTES, { points });
+      socket.nsp.to(roomId).emit(SERVER_ROOM_RESET_VOTES, { points });
     });
 
     // LOGOUT
-    socket.on(DISCONNECTION, () => {
+    socket.on(DISCONNECT, () => {
       const updatedRoom = deleteUserFromRoomService(roomId, socket.id);
 
       socket.to(roomId).emit(SERVER_ROOM_USER_LOGOUT, socket.id);

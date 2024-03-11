@@ -1,7 +1,7 @@
 export enum SocketEvents {
   // generic
   CONNECTION = "connection",
-  DISCONNECTION = "disconnect",
+  DISCONNECT = "disconnect",
   EXCEPTION = "exception",
 
   // server event
@@ -16,6 +16,7 @@ export enum SocketEvents {
   SERVER_ROOM_SHOW_VOTES = "server_room_show_votes",
   SERVER_ROOM_RESET_VOTES = "server_room_reset_votes",
   SERVER_USER_UPDATE_PROFILE = "server_user_update_profile",
+  SERVER_OWNER_ROOM_TRANSFER = "server_owner_room_transfer",
 
   // client event
   CLIENT_ROOM_NEW_TASK = "client_room_new_task",
@@ -25,4 +26,6 @@ export enum SocketEvents {
   CLIENT_ROOM_SHOW_VOTES = "client_room_show_votes",
   CLIENT_ROOM_RESET_VOTES = "client_room_reset_votes",
   CLIENT_USER_UPDATE_PROFILE = "client_user_update_profile",
+  CLIENT_KICK_USER = "client_kick_user",
+  CLIENT_OWNER_ROOM_TRANSFER = "client_owner_room_transfer",
 }

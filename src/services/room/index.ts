@@ -87,7 +87,7 @@ export const roomService = {
 
       return (acc += Number(user.vote));
     }, 0);
-    
+
     const points = totalVotes / users.length;
 
     const updatedTasks = tasks.map((task) => {
@@ -120,7 +120,7 @@ export const roomService = {
     return { currentTaskId, points: 0 };
   },
 
-  updateUserProfile(roomId: string, userId: string, data: Partial<User>) {
+  updateUserProfileService(roomId: string, userId: string, data: Partial<User>) {
     const { users } = findById(roomId);
     const updatedUsers = users.map((user) => {
       if (user.id === userId) {
@@ -134,5 +134,9 @@ export const roomService = {
     });
 
     return updateRoom(roomId, { users: updatedUsers });
+  },
+
+  updateOwnerRoomService(roomId: string, userId: string) {
+    return updateRoom(roomId, { ownerUserId: userId });
   },
 };
