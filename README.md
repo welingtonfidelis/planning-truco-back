@@ -27,4 +27,4 @@ MIT
 **Free Software, Hell Yeah!**
 
 [Node.js]: <https://nodejs.org/en/>
-[Backend]: <https://github.com/welingtonfidelis/planning-truco-front>
+[Frontend]: <https://github.com/welingtonfidelis/planning-truco-front>
