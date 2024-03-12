@@ -46,6 +46,7 @@ const {
   SERVER_USER_UPDATE_PROFILE,
   CLIENT_USER_UPDATE_PROFILE,
   CLIENT_KICK_USER,
+  SERVER_KICK_USER,
   CLIENT_OWNER_ROOM_TRANSFER,
   SERVER_OWNER_ROOM_TRANSFER,
 } = SocketEvents;
@@ -99,7 +100,11 @@ export const socketListener = (socketServer: socketIo.Server) => {
     });
 
     socket.on(CLIENT_KICK_USER, (data: string) => {
-      socket.in(data).disconnectSockets();
+      // socket.in(data).disconnectSockets(); //force socket user disconnect
+      deleteUserFromRoomService(roomId, data);
+
+      socket.nsp.to(roomId).emit(SERVER_KICK_USER, data);
+      socket.in(data).socketsLeave(roomId);
     });
 
     socket.on(CLIENT_OWNER_ROOM_TRANSFER, (data: string) => {
