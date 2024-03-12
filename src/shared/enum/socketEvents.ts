@@ -16,6 +16,7 @@ export enum SocketEvents {
   SERVER_ROOM_SHOW_VOTES = "server_room_show_votes",
   SERVER_ROOM_RESET_VOTES = "server_room_reset_votes",
   SERVER_USER_UPDATE_PROFILE = "server_user_update_profile",
+  SERVER_KICK_USER = "server_kick_user",
   SERVER_OWNER_ROOM_TRANSFER = "server_owner_room_transfer",
 
   // client event

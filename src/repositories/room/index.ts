@@ -30,6 +30,8 @@ export const roomRepository = {
   },
 
   updateRoom(roomId: string, data: Partial<Room>) {
+    if (isNil(rooms[roomId])) return;
+
     return (rooms[roomId] = {
       ...rooms[roomId],
       ...data,
@@ -56,6 +58,8 @@ export const roomRepository = {
   },
 
   deleteUserFromRoom(roomId: string, userId: string) {
+    if (isNil(rooms[roomId])) return;
+
     rooms[roomId].users = rooms[roomId].users.filter(
       (user) => user.id !== userId
     );
@@ -82,6 +86,8 @@ export const roomRepository = {
   },
 
   deleteTaskFromRoom(roomId: string, taskId: string) {
+    if (isNil(rooms[roomId])) return;
+
     rooms[roomId].tasks = rooms[roomId].tasks.filter(
       (task) => task.id !== taskId
     );
@@ -98,6 +104,8 @@ export const roomRepository = {
   },
 
   updateUserVote(roomId: string, userId: string, vote: string) {
+    if (isNil(rooms[roomId])) return;
+
     const updatedUsers = rooms[roomId].users.map((user) => {
       if (user.id === userId) {
         return {
